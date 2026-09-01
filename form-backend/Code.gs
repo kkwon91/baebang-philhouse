@@ -16,7 +16,7 @@
  * ■ 접수 즉시 이메일 알림을 받으려면 아래 NOTIFY_EMAIL 에 이메일을 넣으세요.
  */
 
-var NOTIFY_EMAIL = ''; // 예: 'me@gmail.com' — 비워두면 알림 없음
+var NOTIFY_EMAIL = 'coin5451@gmail.com'; // 접수 즉시 이 주소로 알림 메일 발송 — 비우면 알림 없음
 
 function doPost(e) {
   var p = (e && e.parameter) || {};
