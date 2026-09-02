@@ -64,12 +64,13 @@
     text-shadow:0 2px 12px rgba(0,0,0,.5);
   }
   .hero .h-badge{
-    display:inline-flex;align-items:center;gap:8px;
-    background:rgba(201,150,46,.2);border:1px solid rgba(229,185,84,.75);
-    color:#f3d488;font-size:13.5px;font-weight:700;letter-spacing:.6px;
-    padding:8px 18px;border-radius:999px;margin-bottom:16px;backdrop-filter:blur(3px);
+    display:inline-flex;align-items:center;gap:9px;
+    background:#ffd83b;
+    color:#1d1607;font-size:clamp(15px,2.8vw,18px);font-weight:800;letter-spacing:.4px;
+    padding:11px 22px;border-radius:999px;margin-bottom:18px;
+    box-shadow:0 8px 18px rgba(0,0,0,.4);
   }
-  .hero .h-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--gold-l);animation:pulse 1.5s infinite}
+  .hero .h-badge .dot{width:8px;height:8px;border-radius:50%;background:#e8330f;animation:pulse 1.5s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
   .hero h1{font-size:clamp(26px,5.4vw,44px);font-weight:800;letter-spacing:-.8px;line-height:1.3;text-shadow:0 2px 14px rgba(0,0,0,.5)}
   .hero h1 small{display:block;font-size:clamp(14px,2.4vw,18px);font-weight:600;color:#e9dfc2;letter-spacing:1px;margin-bottom:8px}
@@ -77,11 +78,12 @@
   .hero p b{color:#f3d488}
   .hero .h-cta{margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
   .hbtn{
-    display:inline-flex;align-items:center;gap:8px;border-radius:10px;
-    font-weight:800;font-size:16.5px;padding:14px 26px;letter-spacing:.3px;
+    display:inline-flex;align-items:center;gap:8px;border-radius:0;
+    font-weight:800;font-size:16.5px;padding:15px 28px;letter-spacing:.3px;
+    background:#fff;color:var(--g900);box-shadow:0 10px 24px rgba(0,0,0,.45);
   }
-  .hbtn.gold{background:var(--gold);color:#1d1607;box-shadow:0 8px 22px rgba(0,0,0,.35)}
-  .hbtn.line{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.5);color:#fff;backdrop-filter:blur(3px)}
+  .hbtn.gold{background:#fff;color:var(--g900)}
+  .hbtn.line{background:#fff;color:var(--g900)}
 
   /* ===== 전화 배너 (반복 삽입) ===== */
   .telbanner{
@@ -273,8 +275,8 @@
     flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
     font-size:17px;font-weight:900;letter-spacing:.5px;
   }
-  #btmbar .b-tel{background:linear-gradient(120deg,var(--gold-d),var(--gold));color:#241a05}
-  #btmbar .b-tel svg{width:18px;height:18px;fill:#241a05;animation:ring 2.2s infinite}
+  #btmbar .b-tel{background:#fff;color:var(--g900)}
+  #btmbar .b-tel svg{width:18px;height:18px;fill:var(--g900);animation:ring 2.2s infinite}
   #btmbar .b-form{background:var(--g900);color:#fff}
 
   /* 리빌 */
