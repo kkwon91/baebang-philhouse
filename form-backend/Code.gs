@@ -6,19 +6,20 @@
  *   [배포] → [배포 관리] → 연필(수정) → 버전 "새 버전" → [배포]
  *   ★ "새 배포"를 누르면 URL이 바뀌니 반드시 "배포 관리 → 수정"으로!
  *
- * ■ 문자 알림 켜는 법 (알리고 smartsms.aligo.in)
- *   1. 알리고 가입 → [발신번호 관리]에서 발신번호 등록·인증 (1666-4979 또는 휴대폰)
- *   2. [API 연동] 메뉴에서 API Key 발급 + 발송서버 IP 인증을 "미사용(전체허용)"으로
- *   3. 아래 SMS_ 4개 값 채우기 → 저장 → 새 버전 재배포
+ * ■ 문자 알림 켜는 법 (NHN클라우드 Notification > SMS)
+ *   1. console.nhncloud.com 가입 → 프로젝트 생성 → Notification > SMS 서비스 활성화
+ *   2. SMS 콘솔 [발신번호] 탭에서 발신번호 사전 등록 (심사 1~2영업일)
+ *   3. AppKey: SMS 콘솔 상단 [URL & Appkey]에서 확인 / Secret Key: 같은 화면에서 확인
+ *   4. 아래 SMS_ 4개 값 채우기 → 저장 → "배포 관리 → 수정 → 새 버전" 재배포
  */
 
 var NOTIFY_EMAIL = 'coin5451@gmail.com'; // 접수 알림 메일 — 비우면 메일 없음
 
-// ── 문자(SMS) 알림 설정 — 값이 비어 있으면 문자는 발송되지 않음 ──
-var SMS_API_KEY   = '';                 // 알리고 API Key
-var SMS_USER_ID   = '';                 // 알리고 사용자 ID
-var SMS_SENDER    = '';                 // 알리고에 등록·인증된 발신번호 (예: '16664979')
-var SMS_RECEIVERS = ['01000000000'];    // 접수 알림 받을 번호 목록 (여러 명 가능: ['0101111...', '0102222...'])
+// ── 문자(SMS) 알림 설정 (NHN클라우드) — 값이 비어 있으면 문자는 발송되지 않음 ──
+var SMS_APP_KEY    = '';                // NHN클라우드 SMS AppKey
+var SMS_SECRET_KEY = '';                // NHN클라우드 SMS SecretKey
+var SMS_SEND_NO    = '';                // 사전 등록·승인된 발신번호 (예: '16664979')
+var SMS_RECEIVERS  = ['01000000000'];   // 접수 알림 받을 번호 목록 (여러 명 가능: ['0101111...', '0102222...'])
 
 function doPost(e) {
   var p = (e && e.parameter) || {};
@@ -53,23 +54,24 @@ function notifyEmail(p) {
 }
 
 function notifySms(p) {
-  if (!SMS_API_KEY || !SMS_USER_ID || !SMS_SENDER) return;
+  if (!SMS_APP_KEY || !SMS_SECRET_KEY || !SMS_SEND_NO) return;
+  // 단문(SMS) 90바이트 제한 대비 짧게 구성
   var msg = '[배방 상담신청]\n' +
             (p.name || '이름없음') + ' ' + (p.phone || '') +
-            '\n관심타입: ' + (p.type || '-');
-  SMS_RECEIVERS.forEach(function (to) {
-    UrlFetchApp.fetch('https://apis.aligo.in/send/', {
-      method: 'post',
-      payload: {
-        key: SMS_API_KEY,
-        user_id: SMS_USER_ID,
-        sender: SMS_SENDER,
-        receiver: String(to).replace(/\D/g, ''),
-        msg: msg,
-        testmode_yn: 'N'
-      },
-      muteHttpExceptions: true
-    });
+            '\n타입: ' + (p.type || '-').slice(0, 10);
+  var url = 'https://api-sms.cloud.toast.com/sms/v3.0/appKeys/' + SMS_APP_KEY + '/sender/sms';
+  UrlFetchApp.fetch(url, {
+    method: 'post',
+    contentType: 'application/json;charset=UTF-8',
+    headers: { 'X-Secret-Key': SMS_SECRET_KEY },
+    payload: JSON.stringify({
+      body: msg,
+      sendNo: SMS_SEND_NO,
+      recipientList: SMS_RECEIVERS.map(function (n) {
+        return { recipientNo: String(n).replace(/\D/g, '') };
+      })
+    }),
+    muteHttpExceptions: true
   });
 }
 
