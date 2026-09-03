@@ -1,22 +1,24 @@
 /**
  * 배방 필하우스 리버시티 — 상담신청 접수 백엔드 (Google Apps Script)
- * 접수가 들어올 때마다 구글 스프레드시트에 한 줄씩 쌓이고, 원하면 이메일 알림도 옵니다. 비용 0원.
+ * 접수 → ① 구글시트 저장 ② 이메일 알림 ③ 문자(SMS) 알림
  *
- * ■ 설치 방법 (5분)
- *  1. sheets.google.com 에서 새 스프레드시트 생성 (이름 예: 배방 상담접수)
- *  2. 메뉴 [확장 프로그램] → [Apps Script] 클릭
- *  3. 기본 코드를 모두 지우고 이 파일 내용 전체를 붙여넣기 → 저장(Ctrl+S)
- *  4. 우측 상단 [배포] → [새 배포] → 톱니바퀴에서 유형 "웹 앱" 선택
- *       - 다음 사용자 인증 정보로 실행: 나
- *       - 액세스 권한이 있는 사용자: **모든 사용자**  ← 중요
- *  5. [배포] → 권한 승인(계정 선택 → "고급" → "이동") → 웹 앱 URL 복사
- *  6. index.html 의  var FORM_ENDPOINT = ''  에 복사한 URL 붙여넣기 → 사이트 재업로드
+ * ■ 코드 교체 방법: Apps Script 편집기에서 전체 붙여넣기 → 저장 →
+ *   [배포] → [배포 관리] → 연필(수정) → 버전 "새 버전" → [배포]
+ *   ★ "새 배포"를 누르면 URL이 바뀌니 반드시 "배포 관리 → 수정"으로!
  *
- * ■ 코드 수정 후에는 [배포] → [배포 관리] → 연필 아이콘 → 버전 "새 버전" → [배포] 해야 반영됩니다.
- * ■ 접수 즉시 이메일 알림을 받으려면 아래 NOTIFY_EMAIL 에 이메일을 넣으세요.
+ * ■ 문자 알림 켜는 법 (알리고 smartsms.aligo.in)
+ *   1. 알리고 가입 → [발신번호 관리]에서 발신번호 등록·인증 (1666-4979 또는 휴대폰)
+ *   2. [API 연동] 메뉴에서 API Key 발급 + 발송서버 IP 인증을 "미사용(전체허용)"으로
+ *   3. 아래 SMS_ 4개 값 채우기 → 저장 → 새 버전 재배포
  */
 
-var NOTIFY_EMAIL = 'coin5451@gmail.com'; // 접수 즉시 이 주소로 알림 메일 발송 — 비우면 알림 없음
+var NOTIFY_EMAIL = 'coin5451@gmail.com'; // 접수 알림 메일 — 비우면 메일 없음
+
+// ── 문자(SMS) 알림 설정 — 값이 비어 있으면 문자는 발송되지 않음 ──
+var SMS_API_KEY   = '';                 // 알리고 API Key
+var SMS_USER_ID   = '';                 // 알리고 사용자 ID
+var SMS_SENDER    = '';                 // 알리고에 등록·인증된 발신번호 (예: '16664979')
+var SMS_RECEIVERS = ['01000000000'];    // 접수 알림 받을 번호 목록 (여러 명 가능: ['0101111...', '0102222...'])
 
 function doPost(e) {
   var p = (e && e.parameter) || {};
@@ -29,17 +31,49 @@ function doPost(e) {
   }
   sh.appendRow([new Date(), p.name || '', p.phone || '', p.type || '', p.utm || '', p.page || '']);
 
-  if (NOTIFY_EMAIL) {
-    MailApp.sendEmail(
-      NOTIFY_EMAIL,
-      '[배방 상담신청] ' + (p.name || '이름없음') + ' ' + (p.phone || ''),
-      '성명: ' + (p.name || '') +
-      '\n연락처: ' + (p.phone || '') +
-      '\n관심타입: ' + (p.type || '') +
-      '\n유입(UTM): ' + (p.utm || '') +
-      '\n페이지: ' + (p.page || '') +
-      '\n접수시각: ' + new Date()
-    );
-  }
+  // 알림은 실패해도 접수 저장에 영향 없게 각각 try-catch
+  try { notifyEmail(p); } catch (err) {}
+  try { notifySms(p); } catch (err) {}
+
   return ContentService.createTextOutput('ok');
+}
+
+function notifyEmail(p) {
+  if (!NOTIFY_EMAIL) return;
+  MailApp.sendEmail(
+    NOTIFY_EMAIL,
+    '[배방 상담신청] ' + (p.name || '이름없음') + ' ' + (p.phone || ''),
+    '성명: ' + (p.name || '') +
+    '\n연락처: ' + (p.phone || '') +
+    '\n관심타입: ' + (p.type || '') +
+    '\n유입(UTM): ' + (p.utm || '') +
+    '\n페이지: ' + (p.page || '') +
+    '\n접수시각: ' + new Date()
+  );
+}
+
+function notifySms(p) {
+  if (!SMS_API_KEY || !SMS_USER_ID || !SMS_SENDER) return;
+  var msg = '[배방 상담신청]\n' +
+            (p.name || '이름없음') + ' ' + (p.phone || '') +
+            '\n관심타입: ' + (p.type || '-');
+  SMS_RECEIVERS.forEach(function (to) {
+    UrlFetchApp.fetch('https://apis.aligo.in/send/', {
+      method: 'post',
+      payload: {
+        key: SMS_API_KEY,
+        user_id: SMS_USER_ID,
+        sender: SMS_SENDER,
+        receiver: String(to).replace(/\D/g, ''),
+        msg: msg,
+        testmode_yn: 'N'
+      },
+      muteHttpExceptions: true
+    });
+  });
+}
+
+/** 문자 설정 후 이 함수를 편집기에서 [실행]하면 테스트 문자가 갑니다 */
+function testSms() {
+  notifySms({ name: '테스트', phone: '010-0000-0000', type: '84C' });
 }
