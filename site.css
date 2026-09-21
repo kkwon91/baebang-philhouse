@@ -1,0 +1,153 @@
+/* 배방 필하우스 리버시티 — 공통 스타일 (release 디자인 시스템을 정적 HTML로 이식)
+   페이지 고유 스타일은 각 페이지 <style> 안에 두고, 여기에는 공통 컴포넌트만 둔다. */
+:root{
+  --p:#0E5E52;        /* primary green */
+  --pd:#0B4A40;       /* dark green */
+  --pb:#0E7A66;       /* brand text green */
+  --beige:#E8D6B3; --beige2:#F0DCB4;
+  --gold:#8A6F45;     /* label brown-gold */
+  --hot:#FF6A4D;
+  --bg1:#F7F9F8; --bg2:#F1F7F5;
+  --line:#e3e3e3; --line2:#e6e6e6;
+  --ink:#222; --sub:#555; --mute:#888;
+  --barH:80px;        /* header height (phone: 60px) */
+  --btmH:60px;        /* mobile bottom bar height */
+}
+html,body{margin:0;overflow-x:clip}
+body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:var(--ink);word-break:keep-all;-webkit-font-smoothing:antialiased;background:#fff}
+a{color:inherit;text-decoration:none}
+a:hover{color:var(--p)}
+img{max-width:100%;height:auto;display:block}
+button{font-family:inherit}
+[id]{scroll-margin-top:calc(var(--barH) + 10px)}
+
+@keyframes hotBlink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes hotRing{0%{transform:scale(.9);opacity:.7}100%{transform:scale(1.5);opacity:0}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(255,106,77,.45)}50%{box-shadow:0 0 0 8px rgba(255,106,77,0)}}
+@keyframes sweep{0%{left:-45%}55%,100%{left:120%}}
+@keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
+@keyframes pdot{0%{box-shadow:0 0 0 0 rgba(255,106,77,.6)}100%{box-shadow:0 0 0 9px rgba(255,106,77,0)}}
+@keyframes ring{0%,100%{transform:rotate(0)}10%{transform:rotate(-14deg)}20%{transform:rotate(12deg)}30%{transform:rotate(-10deg)}40%{transform:rotate(8deg)}50%{transform:rotate(0)}}
+
+/* HOT 배지 */
+.hotbadge{position:relative;display:inline-flex;align-items:center;gap:5px;padding:2px 7px 2px 6px;border-radius:999px;background:var(--hot);color:#fff;font-size:11px;font-weight:900;letter-spacing:.06em;line-height:1.4}
+.hotbadge i{width:5px;height:5px;border-radius:50%;background:#fff;animation:hotBlink 1.2s ease-in-out infinite}
+.hotbadge em{position:absolute;inset:-3px;border-radius:999px;border:2px solid var(--hot);opacity:.7;animation:hotRing 1.6s ease-out infinite;pointer-events:none}
+
+/* ===== 헤더 ===== */
+.sh{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line2)}
+.sh-bar{display:flex;align-items:center;height:var(--barH);padding:0 16px;gap:16px}
+.sh-brand{display:flex;align-items:center;gap:8px;white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden}
+.sh-brand .fi{font-weight:900;font-size:22px;color:var(--pb);letter-spacing:-.02em}
+.sh-brand .fh{font-weight:700;font-size:19px;color:var(--pb)}
+.sh-brand .long{font-weight:900;font-size:19px;color:var(--pd)}
+.sh-brand:hover{color:inherit}
+.sh-nav{flex:1;display:flex;justify-content:space-around;align-items:stretch;height:80px;margin:0 20px}
+.sh-nav>a{display:flex;align-items:center;gap:6px;padding:0 14px;font-size:17px;font-weight:500;color:var(--ink);border-bottom:3px solid transparent}
+.sh-nav>a.hot{font-weight:800;color:var(--p)}
+.sh-tel{display:flex;align-items:center;gap:8px;font-weight:700;font-size:22px;color:#111;white-space:nowrap;margin-left:auto}
+.sh-tel:hover{color:#111}
+.sh-burger{width:44px;height:44px;border:1px solid var(--p);border-radius:3px;background:#fff;color:var(--p);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:auto;flex:0 0 auto}
+@media (min-width:1101px){.sh-tel + .sh-burger{margin-left:0}} /* ≤1100 에서는 .sh-tel 이 숨겨지므로 버거가 auto 마진으로 우측 끝에 붙어야 함 */
+/* 메가메뉴: 데스크톱에서 메뉴 hover 시 */
+.sh-mega{display:none;position:absolute;left:0;right:0;top:var(--barH);background:var(--p);box-shadow:0 8px 20px rgba(0,0,0,.15)}
+.sh.mega-open .sh-mega{display:block}
+.sh-mega-in{display:flex;align-items:flex-start;height:160px;padding:26px 20px 0;gap:24px}
+.sh-mega-pad{flex:0 0 auto;visibility:hidden;white-space:nowrap;font-size:19px;font-weight:900}
+.sh-mega-cols{flex:1;display:flex;justify-content:space-around;margin:0 20px}
+.sh-mega-cols>div{display:flex;flex-direction:column;align-items:center;gap:14px;padding:0 14px;min-width:0}
+.sh-mega-cols a{font-size:15px;color:#fff;white-space:nowrap}
+.sh-mega-cols a:hover{text-decoration:underline;color:#fff}
+.sh-mega-tel{flex:0 0 auto;visibility:hidden;font-size:22px;font-weight:700;white-space:nowrap}
+.sh-mega-sp{width:44px;flex:0 0 auto}
+/* 모바일 전체화면 메뉴 */
+.sh-mobile{position:fixed;inset:0;z-index:90;background:var(--p);color:#fff;padding:24px;overflow:auto;display:flex;flex-direction:column;box-sizing:border-box}
+.sh-mobile[hidden]{display:none}
+.sh-mobile-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.sh-mobile-top span{font-weight:900;font-size:20px}
+.sh-mobile-top button{background:none;border:0;color:#fff;font-size:26px;cursor:pointer}
+.sh-mobile-m{border-bottom:1px solid rgba(255,255,255,.2);padding:16px 0}
+.sh-mobile-m>a{display:block;font-size:22px;font-weight:700;color:#fff}
+.sh-mobile-m>div{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:10px}
+.sh-mobile-m>div a{font-size:15px;color:rgba(255,255,255,.8)}
+.sh-mobile a:hover{color:#fff}
+.sh-mobile-tel{margin-top:auto;display:flex;flex-direction:column;align-items:center;padding:18px;background:#fff;color:var(--p);border-radius:4px}
+.sh-mobile-tel span:first-child{font-size:12px;font-weight:700}
+.sh-mobile-tel span:last-child{font-size:28px;font-weight:900}
+.sh-mobile-tel:hover{color:var(--p)}
+body.menu-open{overflow:hidden}
+
+/* 우측 레일 · 상단 버튼 */
+.rail{position:fixed;right:20px;top:160px;z-index:40;display:flex;flex-direction:column;gap:8px;transform-origin:top right}
+.rail a{width:72px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid var(--p);border-radius:3px;background:#fff;color:var(--p);font-weight:700;font-size:15px}
+.rail a.open{width:72px;height:72px;text-align:center;background:var(--p);color:#fff;font-size:12px;line-height:1.5}
+.rail a:hover{color:var(--p)} .rail a.open:hover{color:#fff}
+.totop{position:fixed;right:20px;bottom:20px;z-index:40;width:56px;height:56px;display:flex;align-items:center;justify-content:center;background:#6b6b6b;color:#fff;border-radius:3px}
+.totop:hover{color:#fff}
+
+/* ===== 하단 고정 2버튼 (모바일·태블릿) ===== */
+.btmbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:60;height:var(--btmH);background:#fff;box-shadow:0 -4px 16px rgba(0,0,0,.14)}
+.btmbar a{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:18px;font-weight:800;letter-spacing:-.01em}
+.btmbar .b-tel{background:#fff;color:var(--p)}
+.btmbar .b-tel svg{width:20px;height:20px;fill:var(--p);animation:ring 2.2s infinite}
+.btmbar .b-form{background:var(--p);color:#fff}
+.btmbar .b-form:hover{color:#fff}
+
+/* ===== 관심고객등록 폼 ===== */
+.reg{background:var(--pd);padding:70px 20px 80px;color:#fff}
+.reg-in{max-width:640px;margin:0 auto}
+.reg-head{text-align:center;margin-bottom:26px}
+.reg-lab{font-size:13px;font-weight:700;letter-spacing:.16em;color:var(--beige)}
+.reg-head h2{margin:10px 0 0;font-size:clamp(26px,3vw,38px);font-weight:900;line-height:1.3;letter-spacing:-.02em}
+.reg-head p{margin:14px 0 0;font-size:15px;line-height:1.7;color:rgba(255,255,255,.85)}
+.reg-head p b{color:var(--beige2)}
+.reg-head p a{color:#fff;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.reg-card{background:#fff;color:var(--ink);border-radius:4px;padding:34px 30px 30px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.reg-form .fg{margin-bottom:16px}
+.reg-form label.l{display:block;font-size:14px;font-weight:700;margin-bottom:8px}
+.reg-form .req{color:var(--hot)}
+.reg-form .fn{font-weight:400;color:var(--mute);font-size:12.5px}
+.reg-form input[type=text],.reg-form input[type=tel],.reg-form select{width:100%;box-sizing:border-box;height:50px;padding:0 14px;border:1px solid #cfd8d5;border-radius:3px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;outline:none}
+.reg-form input:focus,.reg-form select:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(14,94,82,.12)}
+.reg-form .telrow{display:flex;align-items:center;gap:6px}
+.reg-form .telrow input{text-align:center;min-width:0}
+.reg-form .hy{color:var(--mute)}
+.privacy-box{margin:18px 0 10px}
+.privacy-box h3{font-size:13px;font-weight:800;margin:0 0 7px}
+.privacy-text{white-space:pre-line;font-size:12.5px;line-height:1.6;color:var(--sub);background:var(--bg1);border:1px solid var(--line);border-radius:3px;padding:12px 14px;max-height:120px;overflow:auto}
+.agree-row{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;margin:0 0 16px;cursor:pointer}
+.agree-row input{width:18px;height:18px;accent-color:var(--p)}
+.submit-btn{width:100%;height:56px;border:0;border-radius:3px;background:var(--p);color:#fff;font-size:18px;font-weight:800;cursor:pointer;letter-spacing:-.01em}
+.submit-btn:hover{background:var(--pd)}
+.submit-btn:active{transform:scale(.985)}
+.inq-badge{margin-top:12px;text-align:center;font-size:13px;font-weight:700;color:var(--gold)}
+.reg-done{text-align:center;padding:20px 0}
+.reg-done h4{margin:0;font-size:22px;font-weight:900;color:var(--p)}
+.reg-done p{margin:12px 0 0;font-size:15px;color:var(--sub);line-height:1.7}
+.reg-done a{color:var(--p);font-weight:800;text-decoration:underline;text-underline-offset:3px}
+
+/* ===== 푸터 ===== */
+.sf{background:#fff;border-top:1px solid var(--line2);padding:40px 20px 60px;text-align:center;color:var(--mute);font-size:15px;line-height:2.1;word-break:keep-all}
+.sf-brand{display:flex;justify-content:center;align-items:center;gap:8px;color:#9a9a9a;font-weight:700;font-size:20px;margin-bottom:22px}
+.sf-brand .b9{font-weight:900}
+.sf p{margin:0}
+.sf .sf-small{margin:12px auto 0;max-width:1000px;font-size:13px;line-height:1.8;color:#9a9a9a}
+.sf-links{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;margin-top:14px;font-size:14px;color:#777}
+.sf .copy{margin:6px 0 0;font-size:14px}
+
+/* ===== 반응형 분기 (release README: >1100 PC 메뉴바 / ≤1100 햄버거 / ≤640 폰) ===== */
+@media (max-width:1100px){
+  .sh-nav,.sh-tel,.sh-mega{display:none!important}
+  .btmbar{display:flex}
+  body{padding-bottom:var(--btmH)}
+  .totop{bottom:calc(var(--btmH) + 12px)}
+}
+@media (max-width:640px){
+  :root{--barH:60px}
+  .sh-brand .long{display:none}
+  .rail{right:10px;top:120px;transform:scale(.78)}
+  .totop{right:10px;width:44px;height:44px}
+  .reg{padding:56px 16px 64px}
+  .reg-card{padding:26px 18px 22px}
+  .sf{font-size:13.5px;line-height:1.9}
+}

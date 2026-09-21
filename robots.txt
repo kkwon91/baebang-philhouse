@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /form-backend/
+Disallow: /src/
+Sitemap: https://xn--vh3bna170cnsee1wpd.com/sitemap.xml

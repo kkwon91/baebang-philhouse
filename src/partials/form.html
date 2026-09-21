@@ -1,0 +1,49 @@
+<section id="register" class="reg" aria-label="관심고객등록">
+  <div class="reg-in">
+    <div class="reg-head">
+      <div class="reg-lab">REGISTER</div>
+      <h2>관심고객등록 · 방문예약</h2>
+      <p>남겨주시면 <b>잔여 동·호 현황</b>과 계약 조건을 순차적으로 안내해드립니다.<br>홍보관은 방문 전 전화 예약을 권합니다 · <a href="tel:{{PHONE_TEL}}">{{PHONE}}</a></p>
+    </div>
+    <div class="reg-card">
+      <form id="rsForm" class="reg-form" novalidate>
+        <div class="fg">
+          <label class="l" for="rsName">1. 성명 <span class="req">*</span></label>
+          <input type="text" id="rsName" name="name" maxlength="10" placeholder="성함을 입력해 주세요" autocomplete="name" required>
+        </div>
+        <div class="fg">
+          <label class="l" for="rsP1">2. 연락처 <span class="req">*</span> <span class="fn">(예: 010 1234 5678)</span></label>
+          <div class="telrow">
+            <input type="tel" id="rsP1" name="p1" maxlength="3" inputmode="numeric" placeholder="010" required aria-label="연락처 앞자리">
+            <span class="hy">-</span>
+            <input type="tel" name="p2" maxlength="4" inputmode="numeric" placeholder="1234" required aria-label="연락처 가운데">
+            <span class="hy">-</span>
+            <input type="tel" name="p3" maxlength="4" inputmode="numeric" placeholder="5678" required aria-label="연락처 뒷자리">
+          </div>
+        </div>
+        <div class="fg">
+          <label class="l" for="rsType">3. 관심 타입</label>
+          <select id="rsType" name="type">
+            <option value="" disabled selected>- 타입 선택 -</option>
+            <option>84A</option><option>84B</option><option>84C (3억대)</option><option>104</option><option>미정 · 상담 후 결정</option>
+          </select>
+        </div>
+        <input type="text" name="company" value="" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="privacy-box">
+          <h3>개인정보 수집·이용에 관한 동의 (필수)</h3>
+          <div class="privacy-text" aria-label="개인정보 수집·이용 동의 내용">1. 수집 항목: 성명, 연락처
+2. 수집·이용 목적: 분양 상담, 방문예약 안내, 분양 관련 정보 제공
+3. 보유 및 이용 기간: 수집일로부터 6개월 이내 파기
+4. 동의를 거부할 권리가 있으며, 거부 시 상담 신청이 제한될 수 있습니다.</div>
+        </div>
+        <label class="agree-row"><input type="checkbox" id="agree" required>개인정보 수집·이용에 동의합니다</label>
+        <button type="submit" class="submit-btn">상담 신청하고 빠른 안내 받기</button>
+        <div class="inq-badge">회사보유분 마지막 선착순 · 동·호수 지정 · 마감 시 조기 종료</div>
+      </form>
+      <div class="reg-done" id="fmDone" hidden>
+        <h4>상담 신청이 접수되었습니다</h4>
+        <p>담당 상담사가 순차적으로 연락드립니다.<br>급하신 경우 <a href="tel:{{PHONE_TEL}}">{{PHONE}}</a>로 바로 전화 주세요.</p>
+      </div>
+    </div>
+  </div>
+</section>
