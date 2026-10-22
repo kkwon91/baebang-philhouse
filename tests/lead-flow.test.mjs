@@ -1,19 +1,24 @@
 import { readFileSync } from 'node:fs';
 import { webcrypto } from 'node:crypto';
 import vm from 'node:vm';
+import path from 'node:path';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const frontend = readFileSync(new URL('../site.js', import.meta.url), 'utf8');
-const backend = readFileSync(new URL('../form-backend/Code.gs', import.meta.url), 'utf8');
+// tests/가 다른 드라이브의 junction이어도 실행한 저장소의 실제 소스를 검증.
+const frontend = readFileSync(path.join(process.cwd(), 'site.js'), 'utf8');
+const backend = readFileSync(path.join(process.cwd(), 'form-backend/Code.gs'), 'utf8');
+const naverTracking = readFileSync(path.join(process.cwd(), 'naver-tracking.js'), 'utf8');
 const turn = () => new Promise(resolve => setImmediate(resolve));
 
-function browser({ search = '', storage = new Map(), receipt = 'saved', networkError = false, storageError = false } = {}) {
+function browser({ search = '', storage = new Map(), receipt = 'saved', networkError = false, storageError = false, naver = false, naverThrows = false } = {}) {
   let now = Date.now();
   const events = {};
   const requests = [];
   const analytics = [];
   const customEvents = [];
+  const documentListeners = {};
+  const naverConversions = [];
   const done = { hidden: true };
   const error = { hidden: true, textContent: '' };
   const button = { disabled: false, textContent: '신청' };
@@ -29,11 +34,13 @@ function browser({ search = '', storage = new Map(), receipt = 'saved', networkE
   const location = { search, pathname: '/sub.html', hash: '', href: 'https://example.test/sub.html' + search };
   const history = { replaceState: (...args) => { history.replaced = args[2]; } };
   const document = {
+    currentScript: { getAttribute: name => name === 'data-account' ? 'mock-only' : 'xn--vh3bna170cnsee1wpd.com' },
+    addEventListener: (name, handler) => { documentListeners[name] = handler; },
     querySelector: () => null,
     querySelectorAll: selector => selector === 'a[href^="#"]' ? [anchor] : [],
     getElementById: id => ({ rsForm: form, fmDone: done, fmError: error, register: { scrollIntoView() {} } }[id] || null),
     createElement: () => ({ remove() {} }),
-    dispatchEvent: event => customEvents.push(event),
+    dispatchEvent: event => { customEvents.push(event); if (documentListeners[event.type]) documentListeners[event.type](event); },
     head: { appendChild: script => {
       const callback = new URL(script.src).searchParams.get('callback');
       setImmediate(() => {
@@ -55,10 +62,36 @@ function browser({ search = '', storage = new Map(), receipt = 'saved', networkE
     alert: message => { throw Error(message); }
   });
   context.window = context;
+  if (naver) {
+    context.wcs = { inflow() {}, trans(payload) { naverConversions.push(payload); if (naverThrows) throw Error('SDK blocked'); } };
+    context.wcs_do = () => {};
+    vm.runInContext(naverTracking, context);
+  }
   vm.runInContext(frontend, context);
   const submit = () => events.submit({ preventDefault() {}, target: form });
-  return { submit, requests, analytics, customEvents, done, error, button, form, events, history };
+  return { submit, requests, analytics, customEvents, naverConversions, done, error, button, form, events, history };
 }
+
+test('real form success triggers one Naver lead while SDK exceptions leave completion intact', async () => {
+  const page = browser({ naver: true, naverThrows: true });
+  page.submit(); page.submit();
+  assert.equal(page.naverConversions.length, 0);
+  await turn(); await turn();
+  assert.equal(page.naverConversions.length, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(page.naverConversions[0])), { type: 'lead' });
+  assert.equal(page.done.hidden, false);
+  assert.equal(page.error.hidden, true);
+  assert.equal(page.button.disabled, false);
+});
+
+test('real form receipt failure never triggers a Naver lead', async () => {
+  const page = browser({ receipt: 'error', naver: true });
+  page.submit();
+  await turn(); await turn();
+  assert.equal(page.naverConversions.length, 0);
+  assert.equal(page.done.hidden, true);
+  assert.equal(page.error.hidden, false);
+});
 
 test('campaign attribution survives page changes and anchor navigation without general query data', async () => {
   const storage = new Map();
