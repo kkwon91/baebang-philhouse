@@ -47,13 +47,23 @@ form-backend/   접수 백엔드(Apps Script) 원본 — 시크릿은 플레이�
 
 ## 접수 확인 기능 배포 순서
 
-1. Apps Script의 기존 메일·SMS·발신번호 설정을 보존하고 `form-backend/Code.gs`의 접수/상태 함수를 반영한다. 로컬 SMS 설정은 플레이스홀더이므로 운영 설정을 덮어쓰지 않는다.
+1. Apps Script의 기존 메일·SMS·발신번호 설정을 보존하고 `form-backend/Code.gs`의 접수/상태 함수를 반영한다. `LEAD_SPREADSHEET_ID`에는 확인된 접수 시트 ID를 운영 편집기에서만 입력한다. 로컬 시트 ID·SMS 설정은 플레이스홀더이므로 운영 설정을 덮어쓰지 않는다.
 2. Apps Script에서 **배포 관리 → 수정 → 새 버전**으로 기존 URL을 유지해 배포한다. 기존 POST 방식과 호환되므로 홈페이지보다 먼저 적용한다.
-3. 기존 웹앱 URL에 `?action=health`를 붙여 `{"version":"receipt-v1","status":"ready"}`를 확인한다. 이 요청은 접수·알림을 생성하지 않는다.
+3. 기존 웹앱 URL에 `?action=health`를 붙여 `{"version":"receipt-v2","status":"ready"}`를 확인한다. 이 요청은 접수·알림을 생성하지 않는다.
 4. `node --test tests/lead-flow.test.mjs`와 `node build.mjs`를 실행한 뒤 홈페이지 변경을 검토·배포한다.
 5. 실제 브라우저의 저장 확인은 허가된 테스트 접수와 운영 시트 확인으로 별도 검증한다. 로컬 모의 테스트는 운영 배포·실접수 성공을 증명하지 않는다.
 
-Apps Script 프로젝트 이름·편집 URL·연결 시트 ID는 저장소에 없다. 프로젝트 소유자 계정으로 기존 배포를 찾아야 한다.
+Apps Script 프로젝트 이름·편집 URL·실제 연결 시트 ID는 저장소에 보관하지 않는다. 프로젝트 소유자 계정으로 기존 배포를 찾아야 한다. 접수 시트는 운영 Apps Script의 `LEAD_SPREADSHEET_ID`로 명시 연결하며 배포 실행 계정에 해당 시트 편집 권한이 있어야 한다.
+
+### 알림 진단
+
+- Apps Script 실행 로그의 `lead_backend`를 확인한다. `save:saved`는 시트 저장, `email:submitted`는 MailApp 호출 완료, `sms:accepted`는 NHN 발송 요청 수락을 뜻한다. 문자 단말 도착은 NHN 콘솔의 발송 결과에서 별도로 확인한다. `health`는 핸들러 응답만 확인하며 시트·문자 서비스 정상 여부를 검사하지 않는다.
+- SMS는 HTTP 상태, NHN `header.isSuccessful`, 요청 `statusCode`, 수신자별 `resultCode`를 검사한다. `partial/rejected/pending/unknown/skipped`를 구분하며 진단에는 상태·코드·건수·NHN 요청 ID만 남긴다. 고객 정보, 전화번호, API 키, 원본 응답·예외는 로그에 넣지 않는다.
+- 수신번호는 반드시 `'010...'`처럼 문자열로 설정한다. 숫자로 입력해 앞 0이 빠진 `10` 시작 10자리만 보조 복원하며 잘못된 번호와 중복 번호는 제외한다. 숫자 리터럴의 8진수 해석까지 복원할 수는 없다.
+- SMS 유형을 유지한다. EUC-KR 90바이트를 넘으면 타입, 이름 순으로 축약하고 제목·전화번호를 보존한다. 이름·타입의 지원하지 않는 문자(예: 이모지)는 SMS에서만 `?`로 대체하고 정규화 여부만 기록한다. 시트·메일의 원문은 보존하며 장문 요금으로 자동 전환하지 않는다.
+- 알림 실패가 저장 완료를 취소하지 않으며 자동 재발송하지 않는다. 동일 receipt의 재시도는 기존처럼 캐시 유지 기간 내 중복 저장·알림을 막는다. 캐시 기록 실패는 `receipt:unknown`으로 남기고 알림은 계속한다. 이때 사이트는 저장 확인에 실패할 수 있고 다시 제출하면 중복될 수 있다. 영구 receipt 저장/복구는 구현하지 않았다.
+- `node --test --test-concurrency=1 tests/*.test.mjs`는 실제 Google/NHN 호출 없이 성공·실패·부분거절·중복·번호 정규화·90바이트 경계를 검증한다. 운영 코드 교체 시 로컬 플레이스홀더 대신 기존 메일/SMS 설정을 보존하고, 기존 배포 URL의 새 버전으로 반영한다.
+- 규격: [NHN SMS API v3.0](https://docs.nhncloud.com/ko/Notification/SMS/ko/api-guide/), [Apps Script Blob 인코딩](https://developers.google.com/apps-script/reference/base/blob).
 
 ## 화면 분기 (release 원본과 동일)
 

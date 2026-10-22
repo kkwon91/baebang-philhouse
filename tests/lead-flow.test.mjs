@@ -164,9 +164,11 @@ function server({ failSave = false, failFlush = false } = {}) {
     ContentService: { createTextOutput: output, MimeType: { JSON: 'json', JAVASCRIPT: 'js' } },
     CacheService: { getScriptCache: () => ({ get: key => cache.get(key), put: (key, value) => cache.set(key, value) }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() { releases++; } }) },
-    SpreadsheetApp: { getActiveSpreadsheet: () => ({ getSheetByName: () => sheet }), flush: () => { if (failFlush) throw Error('flush failure'); } }
+    SpreadsheetApp: { openById: id => { assert.equal(id, 'mock-spreadsheet-id'); return { getSheetByName: () => sheet }; }, flush: () => { if (failFlush) throw Error('flush failure'); } },
+    console: { log() {} }
   });
   vm.runInContext(backend, context);
+  context.LEAD_SPREADSHEET_ID = 'mock-spreadsheet-id';
   context.notifyEmail = () => notices.push('email');
   context.notifySms = () => notices.push('sms');
   const id = '0123456789abcdef0123456789abcdef';
@@ -199,7 +201,7 @@ for (const failure of ['failSave', 'failFlush']) {
 
 test('read-only health/status routes do not write or notify and reject executable callbacks', () => {
   const s = server();
-  assert.equal(JSON.parse(s.context.doGet({ parameter: { action: 'health' } }).text).version, 'receipt-v1');
+  assert.equal(JSON.parse(s.context.doGet({ parameter: { action: 'health' } }).text).version, 'receipt-v2');
   assert.equal(s.context.doGet({ parameter: { action: 'status', receipt_id: s.id, callback: 'alert(1)//' } }).text, 'invalid');
   assert.equal(s.rows.length, 0);
   assert.equal(s.notices.length, 0);
